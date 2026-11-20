@@ -11,8 +11,8 @@
 
 <p align="center">
   <a href="https://github.com/waleedmustafa971/PhoneSentry/releases/latest/download/PhoneSentry.exe"><b>⬇ Download for Windows</b></a> ·
-  <a href="__WEBSITE__">Website</a> ·
-  <a href="__WEBSITE__/samples/sample-threats/report.html">Sample report</a>
+  <a href="https://phonesentry.vercel.app">Website</a> ·
+  <a href="https://phonesentry.vercel.app/samples/sample-threats/report.html">Sample report</a>
 </p>
 
 <p align="center">
