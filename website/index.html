@@ -3,428 +3,487 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PhoneSentry: Spyware & malware scanner for Android and iPhone</title>
-<meta name="description" content="Free Windows app that scans Android phones and iPhones over USB for Pegasus-class spyware, stalkerware and malware, removes threats and produces a clear security report.">
-<meta property="og:title" content="PhoneSentry: Is your phone spying on you?">
-<meta property="og:description" content="Scan Android & iPhone for Pegasus, stalkerware and trojans from your PC. Free and open source.">
+<title>PhoneSentry: spyware and malware scanner for Android and iPhone</title>
+<meta name="description" content="Free, open-source Windows app that scans Android phones and iPhones over USB for Pegasus-class spyware, stalkerware and malware, removes threats and produces a security report.">
+<meta property="og:title" content="PhoneSentry">
+<meta property="og:description" content="Scan Android phones and iPhones for spyware, stalkerware and malware from a Windows PC. Free and open source.">
 <meta property="og:image" content="/images/app-results.png">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#070d1f">
 <link rel="icon" href="/favicon.ico">
+<script>
+  // Theme before first paint: ?theme= > saved choice > system setting.
+  (function () {
+    var t = null;
+    try { t = new URLSearchParams(location.search).get("theme"); } catch (e) {}
+    if (t !== "light" && t !== "dark") { try { t = localStorage.getItem("ps-theme"); } catch (e) {} }
+    if (t !== "light" && t !== "dark") { t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-brands/css/uicons-brands.css">
 <style>
 :root{
-  --bg:#070d1f;--bg2:#0b1430;--card:#0f1a3a;--card2:#13204a;--line:#1e2b55;
-  --ink:#e8edf8;--muted:#9aa7c7;--dim:#6b7899;
-  --cyan:#22d3ee;--blue:#2563eb;--blue2:#3b82f6;--green:#10b981;--red:#ef4444;--amber:#f59e0b;
-  --radius:16px;--max:1160px;
+  --bg:#ffffff; --surface:#f5f6f8; --line:#e2e5ea; --line-strong:#cfd4dc;
+  --text:#111418; --muted:#555e6b; --faint:#7b8494;
+  --accent:#1f4fd1; --accent-hover:#1a43b3; --on-accent:#ffffff;
+  --danger:#b42318; --warn:#a15c07; --ok:#067647;
+  --frame:#0e1116;
+  --max:1120px; --r:8px;
+}
+[data-theme="dark"]{
+  --bg:#0e1116; --surface:#151920; --line:#252b35; --line-strong:#323a46;
+  --text:#e7eaef; --muted:#9aa3b0; --faint:#717b89;
+  --accent:#6b9cff; --accent-hover:#8ab0ff; --on-accent:#0b1020;
+  --danger:#f97066; --warn:#fdb022; --ok:#47cd89;
+  --frame:#252b35;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,system-ui,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
-a{color:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "IBM Plex Sans",system-ui,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
 img{max-width:100%;height:auto;display:block}
-body{overflow-x:clip}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-hover)}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
-.mono{font-family:"JetBrains Mono",Consolas,monospace}
+.fi{display:inline-flex;line-height:1}
+code,.mono{font-family:"IBM Plex Mono",Consolas,monospace}
 
-/* nav */
-nav{position:sticky;top:0;z-index:50;background:rgba(7,13,31,.82);backdrop-filter:blur(14px);border-bottom:1px solid rgba(30,43,85,.6)}
-nav .wrap{display:flex;align-items:center;gap:28px;height:66px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;text-decoration:none;letter-spacing:-.01em}
-.brand img{width:34px;height:34px}
-nav .links{display:flex;gap:24px;margin-left:auto}
-nav .links a{text-decoration:none;color:var(--muted);font-weight:500;font-size:15px}
-nav .links a:hover{color:var(--ink)}
-.btn{display:inline-flex;align-items:center;gap:10px;padding:12px 22px;border-radius:12px;font-weight:600;text-decoration:none;transition:transform .15s,box-shadow .15s,background .15s;white-space:nowrap}
-.btn-primary{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff;box-shadow:0 8px 30px -8px rgba(37,99,235,.7)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 36px -8px rgba(37,99,235,.85)}
-.btn-ghost{border:1px solid var(--line);color:var(--ink);background:rgba(255,255,255,.02)}
-.btn-ghost:hover{background:rgba(255,255,255,.06)}
-.btn-sm{padding:9px 16px;font-size:14px;border-radius:10px}
-.btn svg{width:20px;height:20px}
+/* header */
+header.top{border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:20}
+header.top .wrap{display:flex;align-items:center;height:64px;gap:32px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:600;font-size:17px}
+.brand:hover{color:var(--text)}
+.brand img{width:28px;height:28px}
+.nav{display:flex;gap:26px;margin-left:auto}
+.nav a{color:var(--muted);font-size:15px}
+.nav a:hover{color:var(--text)}
+.actions{display:flex;align-items:center;gap:10px}
+.icon-btn{width:38px;height:38px;border:1px solid var(--line);border-radius:var(--r);background:transparent;color:var(--text);display:grid;place-items:center;cursor:pointer;font-size:16px}
+.icon-btn:hover{border-color:var(--line-strong);background:var(--surface);color:var(--text)}
+[data-theme="light"] .when-dark,[data-theme="dark"] .when-light{display:none}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 18px;border-radius:var(--r);font-weight:500;font-size:15px;border:1px solid transparent;white-space:nowrap}
+.btn .fi{font-size:16px}
+.btn-primary{background:var(--accent);color:var(--on-accent)}
+.btn-primary:hover{background:var(--accent-hover);color:var(--on-accent)}
+.btn-secondary{border-color:var(--line-strong);color:var(--text)}
+.btn-secondary:hover{background:var(--surface);color:var(--text)}
+.btn-sm{height:38px;padding:0 14px;font-size:14px}
 
 /* hero */
-.hero{position:relative;overflow:hidden;padding:84px 0 40px}
-.hero:before{content:"";position:absolute;inset:-200px -200px auto;height:700px;background:radial-gradient(600px 340px at 30% 20%,rgba(34,211,238,.18),transparent 70%),radial-gradient(700px 380px at 75% 10%,rgba(37,99,235,.22),transparent 70%);pointer-events:none}
-.hero .wrap{position:relative;text-align:center}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--line);border-radius:99px;background:rgba(15,26,58,.7);color:var(--muted);font-size:13px;font-weight:500}
-.eyebrow b{color:var(--cyan);font-weight:600}
-h1{font-size:clamp(38px,6vw,68px);line-height:1.05;letter-spacing:-.035em;margin:22px auto 18px;max-width:900px;font-weight:800}
-h1 .grad{background:linear-gradient(120deg,var(--cyan),var(--blue2) 60%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.lead{font-size:clamp(17px,2vw,20px);color:var(--muted);max-width:720px;margin:0 auto 34px}
-.cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-.meta{margin-top:16px;color:var(--dim);font-size:13.5px}
-.trust{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;margin-top:26px;color:var(--muted);font-size:14px}
-.trust span{display:inline-flex;align-items:center;gap:7px}
-.trust svg{width:17px;height:17px;color:var(--green)}
-.shot{margin:58px auto 0;max-width:1060px;border-radius:14px;border:1px solid var(--line);overflow:hidden;box-shadow:0 40px 120px -30px rgba(37,99,235,.45),0 0 0 1px rgba(255,255,255,.03)}
-.shot .bar{height:34px;background:#0c1328;display:flex;align-items:center;gap:7px;padding:0 14px;border-bottom:1px solid var(--line)}
-.shot .bar i{width:11px;height:11px;border-radius:50%;background:#26324f}
+.hero{padding:88px 0 0}
+.hero h1{font-size:clamp(36px,5vw,56px);line-height:1.08;letter-spacing:-.025em;font-weight:700;margin:0 0 20px;max-width:780px}
+.hero p.lead{font-size:19px;color:var(--muted);max-width:680px;margin:0 0 32px}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.meta{margin-top:18px;color:var(--faint);font-size:14px}
+.meta span+span:before{content:"·";margin:0 8px}
+.screen{margin-top:56px;border:1px solid var(--frame);border-radius:10px;overflow:hidden;background:var(--frame)}
 
-/* stats */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin:70px auto 0}
-.stat{background:var(--bg2);padding:26px 22px;text-align:center}
-.stat b{display:block;font-size:34px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(120deg,#fff,#b8c6ee);-webkit-background-clip:text;background-clip:text;color:transparent}
-.stat span{color:var(--muted);font-size:14px}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:64px}
+.facts div{padding:26px 24px}
+.facts div+div{border-left:1px solid var(--line)}
+.facts b{display:block;font-size:30px;font-weight:600;letter-spacing:-.02em}
+.facts span{color:var(--muted);font-size:14px}
 
 /* sections */
-section{padding:96px 0}
-.sec-head{text-align:center;max-width:720px;margin:0 auto 52px}
-.kicker{color:var(--cyan);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
-h2{font-size:clamp(30px,4vw,44px);letter-spacing:-.03em;line-height:1.12;margin:10px 0 14px;font-weight:800}
-.sec-head p{color:var(--muted);font-size:18px;margin:0}
-.alt{background:linear-gradient(180deg,var(--bg2),var(--bg))}
+section{padding:104px 0 0}
+.head{max-width:680px;margin-bottom:44px}
+.label{font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px}
+h2{font-size:clamp(28px,3.4vw,38px);line-height:1.15;letter-spacing:-.02em;font-weight:700;margin:0 0 12px}
+.head p{color:var(--muted);font-size:17px;margin:0}
 
-/* features */
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.feat{background:linear-gradient(180deg,var(--card),rgba(15,26,58,.55));border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:border-color .2s,transform .2s}
-.feat:hover{border-color:#2d4180;transform:translateY(-3px)}
-.ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;margin-bottom:16px;background:rgba(34,211,238,.1);color:var(--cyan)}
-.ico svg{width:23px;height:23px}
-.ico.red{background:rgba(239,68,68,.12);color:#f87171}.ico.amber{background:rgba(245,158,11,.12);color:#fbbf24}
-.ico.green{background:rgba(16,185,129,.12);color:#34d399}.ico.blue{background:rgba(59,130,246,.14);color:#60a5fa}
-.feat h3{margin:0 0 8px;font-size:18px;letter-spacing:-.01em}
-.feat p{margin:0;color:var(--muted);font-size:15px}
+/* features: ruled grid */
+.features{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.feature{padding:28px 26px 30px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.feature .fi{font-size:22px;color:var(--accent);margin-bottom:16px}
+.feature h3{font-size:17px;font-weight:600;margin:0 0 6px}
+.feature p{margin:0;color:var(--muted);font-size:15px}
 
-/* threats */
-.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:960px;margin:0 auto}
-.chip{padding:8px 15px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:14px;font-weight:500;color:#cdd6ee}
-.chip.hot{border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.08);color:#fecaca}
-.chip.stalk{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.07);color:#fde68a}
-.chip.mal{border-color:rgba(59,130,246,.45);background:rgba(59,130,246,.08);color:#bfdbfe}
-.legend{display:flex;gap:22px;justify-content:center;margin-top:22px;color:var(--dim);font-size:13px;flex-wrap:wrap}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:middle}
+/* coverage */
+.coverage{display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+.coverage h3{font-size:16px;font-weight:600;margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.coverage h3 .fi{color:var(--muted);font-size:17px}
+.coverage ul{list-style:none;margin:0;padding:0;columns:2;column-gap:20px}
+.coverage li{color:var(--muted);font-size:15px;padding:3px 0;break-inside:avoid}
+.coverage .note{margin-top:12px;font-size:14px;color:var(--faint)}
 
-/* steps */
-.how{display:grid;grid-template-columns:1fr 1.25fr;gap:52px;align-items:center}
-.steps{counter-reset:s;display:grid;gap:16px}
-.step{position:relative;padding:22px 22px 22px 76px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card)}
-.step:before{counter-increment:s;content:counter(s);position:absolute;left:22px;top:22px;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-weight:800;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff}
-.step h3{margin:0 0 4px;font-size:17px}
-.step p{margin:0;color:var(--muted);font-size:15px}
-.step small{display:block;margin-top:8px;color:var(--dim);font-size:13px}
-.frame{border-radius:14px;border:1px solid var(--line);overflow:hidden;box-shadow:0 30px 80px -30px rgba(34,211,238,.35)}
+/* how */
+.how{display:grid;grid-template-columns:5fr 7fr;gap:56px;align-items:start}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;gap:4px 12px;padding:22px 0;border-top:1px solid var(--line)}
+.steps li:last-child{border-bottom:1px solid var(--line)}
+.steps li:before{content:counter(s,decimal-leading-zero);font-family:"IBM Plex Mono",monospace;color:var(--accent);font-weight:500;grid-row:span 3;padding-top:1px}
+.steps h3{margin:0;font-size:17px;font-weight:600}
+.steps p{margin:0;color:var(--muted);font-size:15px}
+.steps small{color:var(--faint);font-size:13.5px}
+.frame{border:1px solid var(--frame);border-radius:10px;overflow:hidden;background:var(--frame)}
 
 /* reports */
-.reports{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-.report{display:block;text-decoration:none;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--card);transition:transform .2s,border-color .2s}
-.report:hover{transform:translateY(-4px);border-color:#2d4180}
-.report .img{height:400px;overflow:hidden;background:#f6f7fb;position:relative}
-.report .img:after{content:"";position:absolute;inset:auto 0 0;height:90px;background:linear-gradient(transparent,var(--card))}
-.report .body{padding:20px 24px 24px}
-.report h3{margin:0 0 4px;font-size:18px;display:flex;align-items:center;gap:10px}
-.report p{margin:0;color:var(--muted);font-size:15px}
-.tag{font-size:12px;padding:3px 10px;border-radius:99px;font-weight:600}
-.tag.bad{background:rgba(239,68,68,.15);color:#fca5a5}.tag.ok{background:rgba(16,185,129,.15);color:#6ee7b7}
-.report .open{margin-top:14px;color:var(--cyan);font-weight:600;font-size:14px}
-.includes{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
-.inc{padding:16px 18px;border-radius:12px;border:1px solid var(--line);background:rgba(15,26,58,.5);font-size:14px;color:var(--muted)}
-.inc b{display:block;color:var(--ink);font-size:15px;margin-bottom:2px}
+.reports{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.report .preview{display:block;border:1px solid var(--line);border-radius:10px;overflow:hidden;height:380px;background:#f6f7fb}
+.report .preview img{width:100%}
+.report h3{margin:20px 0 6px;font-size:18px;font-weight:600;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.status{font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.status.bad{color:var(--danger)}.status.ok{color:var(--ok)}
+.report p{margin:0 0 12px;color:var(--muted);font-size:15px}
+.link{display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:15px}
+.contents{display:grid;grid-template-columns:repeat(4,1fr);margin-top:48px;border-top:1px solid var(--line)}
+.contents div{padding:20px 20px 0 0}
+.contents b{display:block;font-size:15px;font-weight:600;margin-bottom:4px}
+.contents span{color:var(--muted);font-size:14px}
 
 /* table */
-.table{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--card)}
+.table-wrap{border:1px solid var(--line);border-radius:10px;overflow:hidden}
 table{width:100%;border-collapse:collapse;font-size:15px}
-th,td{padding:15px 20px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th,td{text-align:left;padding:15px 20px;border-bottom:1px solid var(--line);vertical-align:top}
 tr:last-child td{border-bottom:0}
-th{background:var(--card2);color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
-td:first-child{font-weight:600;color:var(--ink);width:24%}
+th{background:var(--surface);font-weight:600;font-size:14px}
+th .fi{margin-right:8px;vertical-align:-2px;color:var(--muted)}
 td{color:var(--muted)}
-.yes{color:#34d399;font-weight:700}
+td:first-child{color:var(--text);font-weight:500;width:26%}
+.yes{color:var(--ok);margin-right:6px;vertical-align:-2px}
 
 /* privacy */
-.privacy{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
-.pcard{padding:26px;border-radius:var(--radius);border:1px solid var(--line);background:var(--card)}
-.pcard h3{margin:0 0 10px;font-size:18px;display:flex;gap:10px;align-items:center}
-.pcard ul{margin:0;padding-left:20px;color:var(--muted);font-size:15px}
-.pcard li{margin:6px 0}
-.notice{margin-top:18px;padding:20px 24px;border-radius:var(--radius);border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.06);color:#fde7b0;font-size:15px}
-.notice a{color:#fcd34d}
+.privacy{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+.privacy h3{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;margin:0 0 14px}
+.privacy h3 .fi{color:var(--accent);font-size:19px}
+.checks{list-style:none;margin:0;padding:0}
+.checks li{display:grid;grid-template-columns:22px 1fr;gap:8px;color:var(--muted);font-size:15px;padding:6px 0}
+.checks .fi{color:var(--ok);font-size:14px;padding-top:5px}
+.limits{margin-top:44px;padding:22px 0 0;border-top:1px solid var(--line);display:grid;grid-template-columns:22px 1fr;gap:12px;color:var(--muted);font-size:15px}
+.limits .fi{color:var(--warn);font-size:18px;padding-top:3px}
+.limits b{color:var(--text)}
 
 /* faq */
-.faq{max-width:820px;margin:0 auto;display:grid;gap:12px}
-details{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:0 22px}
-summary{cursor:pointer;list-style:none;padding:19px 0;font-weight:600;font-size:16.5px;display:flex;justify-content:space-between;gap:20px}
-summary::-webkit-details-marker{display:none}
-summary:after{content:"+";color:var(--cyan);font-size:22px;line-height:1;font-weight:400;transition:transform .2s}
-details[open] summary:after{transform:rotate(45deg)}
-details p{margin:0 0 20px;color:var(--muted);font-size:15.5px}
-code{font-family:"JetBrains Mono",Consolas,monospace;font-size:13px;background:rgba(255,255,255,.06);padding:2px 7px;border-radius:6px;color:#cfe3ff}
+.faq{border-top:1px solid var(--line);max-width:860px}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{list-style:none;cursor:pointer;padding:20px 0;font-weight:500;font-size:16.5px;display:flex;justify-content:space-between;align-items:center;gap:24px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary .fi{color:var(--muted);font-size:14px;transition:transform .15s}
+.faq details[open] summary .fi{transform:rotate(90deg)}
+.faq details p{margin:0 0 22px;color:var(--muted);font-size:15.5px;max-width:760px}
+code{font-size:13.5px;background:var(--surface);border:1px solid var(--line);padding:1px 6px;border-radius:5px}
 
 /* download */
-.download{position:relative;overflow:hidden;border-radius:24px;border:1px solid var(--line);background:radial-gradient(600px 300px at 15% 0%,rgba(34,211,238,.18),transparent 70%),radial-gradient(600px 300px at 90% 100%,rgba(37,99,235,.25),transparent 70%),var(--bg2);padding:64px 40px;text-align:center}
-.download img{width:92px;margin:0 auto 18px}
-.download h2{margin-top:0}
-.download p{color:var(--muted);max-width:620px;margin:0 auto 28px;font-size:17px}
-.checksum{margin:26px auto 0;max-width:720px;text-align:left;font-size:13px;color:var(--muted)}
-.checksum .hash{display:flex;gap:10px;align-items:center;margin-top:8px;padding:12px 14px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--line);overflow:hidden}
-.checksum .hash code{min-width:0;background:none;padding:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;color:#9fe7f5}
-.copy{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:5px 11px;font:500 12px Inter,sans-serif;cursor:pointer}
-.reqs{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin-top:22px;color:var(--dim);font-size:13.5px}
+.download{border:1px solid var(--line);border-radius:12px;padding:48px;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center}
+.download h2{margin-bottom:8px}
+.download p{margin:0;color:var(--muted)}
+.spec{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:16px;color:var(--faint);font-size:14px}
+.spec span{display:inline-flex;align-items:center;gap:7px}
+.hash{grid-column:1/-1;border-top:1px solid var(--line);padding-top:24px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;font-size:14px;color:var(--muted)}
+.hash code{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;color:var(--text)}
+.copy{height:34px;padding:0 12px;border:1px solid var(--line-strong);background:transparent;color:var(--text);border-radius:6px;font:500 13px "IBM Plex Sans",sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.copy:hover{background:var(--surface)}
 
-footer{border-top:1px solid var(--line);padding:40px 0 50px;color:var(--dim);font-size:14px}
-footer .wrap{display:flex;gap:30px;justify-content:space-between;flex-wrap:wrap}
-footer a{color:var(--muted);text-decoration:none}
-footer a:hover{color:var(--ink)}
-footer .cols{display:flex;gap:28px;flex-wrap:wrap}
-.fine{max-width:520px}
+footer{border-top:1px solid var(--line);margin-top:104px;padding:40px 0 56px;font-size:14px;color:var(--muted)}
+footer .wrap{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px}
+footer h4{margin:0 0 10px;font-size:14px;font-weight:600;color:var(--text)}
+footer ul{list-style:none;margin:0;padding:0}
+footer li{padding:3px 0}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--text)}
+footer .about p{margin:12px 0 0;max-width:380px}
+footer .credit{grid-column:1/-1;border-top:1px solid var(--line);padding-top:20px;color:var(--faint);font-size:13px}
 
-@media (max-width:960px){
-  .grid{grid-template-columns:1fr 1fr}.how{grid-template-columns:1fr}.includes{grid-template-columns:1fr 1fr}
-  nav .links{display:none}.stats{grid-template-columns:1fr 1fr}
+@media (max-width:980px){
+  .nav{display:none}
+  .actions{margin-left:auto}
+  .features{grid-template-columns:1fr 1fr}
+  .coverage{grid-template-columns:1fr;gap:32px}
+  .how{grid-template-columns:1fr}
+  .contents{grid-template-columns:1fr 1fr}
+  .privacy{grid-template-columns:1fr;gap:36px}
+  footer .wrap{grid-template-columns:1fr 1fr}
+  footer .about{grid-column:1/-1}
 }
-@media (max-width:680px){
-  .wrap{padding:0 16px}.grid,.reports,.privacy{grid-template-columns:1fr}.includes{grid-template-columns:1fr}
-  section{padding:70px 0}.hero{padding-top:56px}.report .img{height:300px}
-  th,td{padding:12px 12px;font-size:14px}.download{padding:44px 20px}
-  nav .btn-sm span{display:none}
-  .cta .btn{width:100%;justify-content:center}.trust{gap:10px 18px}h1{font-size:40px}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .hero{padding-top:56px}
+  .facts{grid-template-columns:1fr 1fr}
+  .facts div:nth-child(3){border-left:0}
+  .facts div:nth-child(n+3){border-top:1px solid var(--line)}
+  .features,.reports,.contents{grid-template-columns:1fr}
+  .report .preview{height:280px}
+  section{padding-top:76px}
+  .download{grid-template-columns:1fr;padding:28px 20px}
+  .hash{grid-template-columns:1fr auto}
+  .hash>span{grid-column:1/-1}
+  th,td{padding:12px}
+  .actions .btn-sm span{display:none}
+  .cta .btn{flex:1 1 100%;justify-content:center}
+  .coverage ul{columns:1}
 }
 </style>
 </head>
 <body>
 
-<nav>
+<header class="top">
   <div class="wrap">
     <a class="brand" href="#"><img src="/images/logo.png" alt="">PhoneSentry</a>
-    <div class="links">
-      <a href="#features">Features</a><a href="#how">How it works</a><a href="#reports">Reports</a>
-      <a href="#privacy">Privacy</a><a href="#faq">FAQ</a>
-      <a href="https://github.com/waleedmustafa971/PhoneSentry">GitHub</a>
-    </div>
-    <a class="btn btn-primary btn-sm" href="#download">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg><span>Download</span></a>
-  </div>
-</nav>
-
-<header class="hero">
-  <div class="wrap">
-    <span class="eyebrow"><b>New</b> · v1.0 for Windows · Android &amp; iPhone</span>
-    <h1>Is your phone <span class="grad">spying on you?</span></h1>
-    <p class="lead">PhoneSentry scans Android phones and iPhones over USB for Pegasus-class spyware, stalkerware and trojans. It removes what it finds and gives you a clear security report. Free, open source and offline.</p>
-    <div class="cta">
-      <a class="btn btn-primary" href="https://github.com/waleedmustafa971/PhoneSentry/releases/latest/download/PhoneSentry.exe">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.4 4.5v7H3zm0 13 7.4 1v-7H3zm8.3 1.1L21 21v-8.5h-9.7zm0-15.2v7.1H21V3z"/></svg>
-        Download for Windows</a>
-      <a class="btn btn-ghost" href="/samples/sample-threats/report.html">View a sample report →</a>
-    </div>
-    <div class="meta">v1.0.0 · 86.5 MB · Windows 10 / 11 (64-bit) · <a href="https://github.com/waleedmustafa971/PhoneSentry/releases">All releases</a></div>
-    <div class="trust">
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg>Free &amp; open source (GPL-3.0)</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg>Your data never leaves your PC</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg>Powered by Amnesty's MVT indicators</span>
-    </div>
-    <div class="shot">
-      <div class="bar"><i></i><i></i><i></i></div>
-      <img src="/images/app-results.png" alt="PhoneSentry showing a detected stalkerware app and a banking trojan" width="1770" height="900">
-    </div>
-    <div class="stats">
-      <div class="stat"><b>11,494</b><span>threat indicators</span></div>
-      <div class="stat"><b>19</b><span>spyware intelligence feeds</span></div>
-      <div class="stat"><b>190+</b><span>stalkerware families</span></div>
-      <div class="stat"><b>2</b><span>platforms: Android &amp; iOS</span></div>
+    <nav class="nav" aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#coverage">Coverage</a>
+      <a href="#reports">Reports</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="actions">
+      <button class="icon-btn" id="theme" type="button" aria-label="Switch colour theme" title="Switch colour theme">
+        <i class="fi fi-rr-moon when-light"></i><i class="fi fi-rr-sun when-dark"></i>
+      </button>
+      <a class="icon-btn" href="https://github.com/waleedmustafa971/PhoneSentry" aria-label="Source code on GitHub" title="Source code on GitHub"><i class="fi fi-brands-github"></i></a>
+      <a class="btn btn-primary btn-sm" href="#download"><i class="fi fi-rr-download"></i><span>Download</span></a>
     </div>
   </div>
 </header>
 
+<main>
+<div class="hero">
+  <div class="wrap">
+    <h1>Check your phone for spyware and malware</h1>
+    <p class="lead">PhoneSentry is a free Windows app that scans Android phones and iPhones over USB for Pegasus-class spyware, stalkerware and trojans. It removes what it finds and writes a security report you can read.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/waleedmustafa971/PhoneSentry/releases/latest/download/PhoneSentry.exe"><i class="fi fi-brands-windows"></i>Download for Windows</a>
+      <a class="btn btn-secondary" href="/samples/sample-threats/report.html"><i class="fi fi-rr-document"></i>View a sample report</a>
+    </div>
+    <div class="meta"><span>Version 1.0.0</span><span>86.5 MB</span><span>Windows 10 and 11</span><span>Open source, GPL-3.0</span></div>
+    <div class="screen"><img src="/images/app-results.png" alt="PhoneSentry results screen listing a stalkerware app and a banking trojan" width="1770" height="900"></div>
+    <div class="facts">
+      <div><b>11,494</b><span>threat indicators</span></div>
+      <div><b>19</b><span>intelligence feeds</span></div>
+      <div><b>190+</b><span>stalkerware families</span></div>
+      <div><b>0</b><span>bytes of phone data uploaded</span></div>
+    </div>
+  </div>
+</div>
+
 <section id="features">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">Features</div>
-      <h2>Forensic-grade detection, made simple</h2>
-      <p>The same techniques human-rights researchers use to uncover state spyware, in an app anyone can run.</p>
+    <div class="head">
+      <div class="label">Features</div>
+      <h2>Forensic detection without the forensics training</h2>
+      <p>PhoneSentry packages the methods human-rights researchers use to find state spyware into an app anyone can run.</p>
     </div>
-    <div class="grid">
-      <div class="feat"><div class="ico red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div>
-        <h3>Mercenary spyware</h3><p>Matches against public indicators for NSO Pegasus, Predator, Candiru, QuaDream, Operation Triangulation, NoviSpy and more.</p></div>
-      <div class="feat"><div class="ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
-        <h3>Stalkerware</h3><p>Detects 190+ commercial monitoring apps that a partner, ex or employer may have hidden on the phone to read messages and track location.</p></div>
-      <div class="feat"><div class="ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10V6z"/><path d="M9 12h6M12 9v6"/></svg></div>
-        <h3>Trojans &amp; malware</h3><p>Scores every app on behaviour: accessibility and device-admin abuse, SMS interception, overlays, hidden icons, fake "system" apps.</p></div>
-      <div class="feat"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><circle cx="11" cy="14" r="2.5"/><path d="m13 16 2 2"/></svg></div>
-        <h3>Deep forensic scan</h3><p>Analyses a full Android bug report or an encrypted iPhone backup with MVT: message links, browsing history, process and data-usage records.</p></div>
-      <div class="feat"><div class="ico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/><path d="M10 11v5M14 11v5"/></svg></div>
-        <h3>One-click removal</h3><p>Tick a threat and remove it. Apps lose their access and are uninstalled. Anything that needs a tap on the phone is explained step by step.</p></div>
-      <div class="feat"><div class="ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-        <h3>Security check-up</h3><p>Bootloader, root/jailbreak, patch age, Play Protect, proxies, private DNS, VPNs, profiles, Developer Mode, each with a plain-language fix.</p></div>
-      <div class="feat"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l3-4 3 2 5-6"/></svg></div>
-        <h3>Clear report</h3><p>Device brand, model, OS and patch level; threats, actions taken and prioritised recommendations, as HTML you can print or share.</p></div>
-      <div class="feat"><div class="ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 1 0 6 16.9"/><path d="M12 13v8M9 18l3 3 3-3"/></svg></div>
-        <h3>Optional cloud check</h3><p>Add a free VirusTotal or MalwareBazaar key to check sideloaded apps against 70+ antivirus engines. Only fingerprints are sent.</p></div>
-      <div class="feat"><div class="ico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
-        <h3>Nothing to install</h3><p>A single .exe with adb and the threat database built in. No Python, no SDK, no root or jailbreak needed.</p></div>
+    <div class="features">
+      <div class="feature"><i class="fi fi-rr-radar"></i><h3>Mercenary spyware</h3><p>Matches against published indicators for NSO Pegasus, Predator, Candiru, QuaDream, Operation Triangulation, NoviSpy and others.</p></div>
+      <div class="feature"><i class="fi fi-rr-incognito"></i><h3>Stalkerware</h3><p>Finds more than 190 commercial monitoring apps that someone with access to the phone may have installed to read messages and track location.</p></div>
+      <div class="feature"><i class="fi fi-rr-bug"></i><h3>Trojans and malware</h3><p>Scores every app on behaviour: accessibility and device-admin abuse, SMS interception, screen overlays, hidden icons, fake system apps.</p></div>
+      <div class="feature"><i class="fi fi-rr-fingerprint"></i><h3>Deep forensic scan</h3><p>Analyses a full Android bug report or an encrypted iPhone backup with MVT, covering message links, browser history and process records.</p></div>
+      <div class="feature"><i class="fi fi-rr-trash"></i><h3>Threat removal</h3><p>Select a threat and remove it. Apps lose their permissions and are uninstalled. Steps that need a tap on the phone are explained.</p></div>
+      <div class="feature"><i class="fi fi-rr-user-shield"></i><h3>Security check-up</h3><p>Bootloader, root and jailbreak, patch age, Play Protect, proxies, private DNS, VPNs, profiles and Developer Mode, each with a fix.</p></div>
+      <div class="feature"><i class="fi fi-rr-file-chart-line"></i><h3>Readable report</h3><p>Brand, model, OS and patch level; what was found and why; what was removed; and a prioritised list of what to do next.</p></div>
+      <div class="feature"><i class="fi fi-rr-cloud-download"></i><h3>Optional cloud lookup</h3><p>Add a free VirusTotal or MalwareBazaar key to check sideloaded apps against 70+ engines. Only file fingerprints are sent.</p></div>
+      <div class="feature"><i class="fi fi-rr-computer"></i><h3>Nothing to set up</h3><p>One executable with adb and the threat database included. No Python, no SDK, and no root or jailbreak on the phone.</p></div>
     </div>
   </div>
 </section>
 
-<section class="alt" id="threats">
+<section id="coverage">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">Coverage</div>
-      <h2>Threats PhoneSentry looks for</h2>
-      <p>Indicator feeds published by Amnesty International, Citizen Lab, Kaspersky, Meta, Echap and other researchers, refreshed from inside the app.</p>
+    <div class="head">
+      <div class="label">Coverage</div>
+      <h2>What PhoneSentry looks for</h2>
+      <p>Indicators published by Amnesty International, Citizen Lab, Kaspersky, Meta, Echap and other researchers. Update them from inside the app.</p>
     </div>
-    <div class="chips">
-      <span class="chip hot">NSO Pegasus</span><span class="chip hot">Intellexa Predator</span><span class="chip hot">Candiru</span>
-      <span class="chip hot">QuaDream KingSpawn</span><span class="chip hot">Operation Triangulation</span><span class="chip hot">NoviSpy</span>
-      <span class="chip hot">RCS Lab Hermit</span><span class="chip hot">Wintego Helios</span><span class="chip hot">Cellebrite</span>
-      <span class="chip hot">EagleMsgSpy</span><span class="chip hot">WyrmSpy &amp; DragonEgg</span><span class="chip hot">ResidentBat</span>
-      <span class="chip hot">Coruna</span><span class="chip hot">DarkSword</span><span class="chip hot">Spyrtacus</span><span class="chip hot">Morpheus</span>
-      <span class="chip mal">BTMOB RAT</span><span class="chip mal">Banking trojans</span><span class="chip mal">SMS stealers</span>
-      <span class="chip mal">Overlay phishing</span><span class="chip mal">Fake system apps</span><span class="chip mal">Droppers</span>
-      <span class="chip stalk">mSpy</span><span class="chip stalk">FlexiSpy</span><span class="chip stalk">TheTruthSpy</span><span class="chip stalk">Cerberus</span>
-      <span class="chip stalk">Hoverwatch</span><span class="chip stalk">Spyzie</span><span class="chip stalk">+180 more stalkerware apps</span>
+    <div class="coverage">
+      <div>
+        <h3><i class="fi fi-rr-shield-exclamation"></i>Mercenary spyware</h3>
+        <ul><li>NSO Pegasus</li><li>Intellexa Predator</li><li>Candiru</li><li>QuaDream KingSpawn</li><li>Operation Triangulation</li><li>NoviSpy</li><li>RCS Lab</li><li>Wintego Helios</li><li>Cellebrite</li><li>EagleMsgSpy</li><li>WyrmSpy, DragonEgg</li><li>ResidentBat</li><li>Coruna</li><li>DarkSword</li><li>Spyrtacus</li><li>Morpheus</li></ul>
+      </div>
+      <div>
+        <h3><i class="fi fi-rr-eye"></i>Stalkerware</h3>
+        <ul><li>mSpy</li><li>FlexiSpy</li><li>TheTruthSpy</li><li>Cerberus</li><li>Hoverwatch</li><li>Spyzie</li><li>Cocospy</li><li>SpyHuman</li><li>TrackView</li><li>Reptilicus</li></ul>
+        <div class="note">and more than 180 others from the Echap feed</div>
+      </div>
+      <div>
+        <h3><i class="fi fi-rr-bug"></i>Malware behaviour</h3>
+        <ul><li>Banking trojans</li><li>SMS and 2FA stealers</li><li>Overlay phishing</li><li>Fake system apps</li><li>Droppers</li><li>Hidden apps</li><li>Device-admin lockers</li><li>Remote access (BTMOB)</li></ul>
+      </div>
     </div>
-    <div class="legend"><span><i style="background:#ef4444"></i>Mercenary spyware</span><span><i style="background:#3b82f6"></i>Malware &amp; trojans</span><span><i style="background:#f59e0b"></i>Stalkerware</span></div>
   </div>
 </section>
 
 <section id="how">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">How it works</div>
-      <h2>Three steps, no expertise needed</h2>
-      <p>PhoneSentry walks you through connecting the phone and explains every result in plain language.</p>
+    <div class="head">
+      <div class="label">How it works</div>
+      <h2>Three steps</h2>
+      <p>The app guides you through connecting the phone and explains each result in plain language.</p>
     </div>
     <div class="how">
-      <div class="steps">
-        <div class="step"><h3>Connect your phone</h3><p>Plug it in with a USB cable. PhoneSentry detects it and shows the brand and model.</p>
-          <small>Android: turn on USB debugging and tap "Allow". iPhone: install Apple Devices and tap "Trust".</small></div>
-        <div class="step"><h3>Scan</h3><p>Quick scan in about a minute, or a deep forensic scan for Pegasus-grade coverage.</p>
-          <small>Deep scan: 5-10 min on Android, 15-40 min on iPhone.</small></div>
-        <div class="step"><h3>Review, remove, report</h3><p>See what was found and why, remove threats with one click, and get a full report with recommendations.</p>
-          <small>Reports are saved to Documents\PhoneSentry Reports.</small></div>
-      </div>
-      <div class="frame"><img src="/images/app-scan.png" alt="PhoneSentry during a deep forensic scan" loading="lazy" width="1770" height="900"></div>
+      <ol class="steps">
+        <li><h3>Connect the phone</h3><p>Plug it in with a USB cable. PhoneSentry detects it and shows the brand and model.</p><small>Android: enable USB debugging and tap Allow. iPhone: install Apple Devices and tap Trust.</small></li>
+        <li><h3>Run a scan</h3><p>A quick scan takes about a minute. The deep forensic scan adds full spyware forensics.</p><small>Deep scan: 5 to 10 minutes on Android, 15 to 40 on iPhone.</small></li>
+        <li><h3>Review and act</h3><p>See what was found and why, remove threats, and open the report with recommendations.</p><small>Reports are saved to Documents\PhoneSentry Reports.</small></li>
+      </ol>
+      <div class="frame"><img src="/images/app-scan.png" alt="PhoneSentry during a deep forensic scan" width="1770" height="900" loading="lazy"></div>
     </div>
   </div>
 </section>
 
-<section class="alt" id="reports">
+<section id="reports">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">Reports</div>
-      <h2>A report you can actually understand</h2>
-      <p>Every scan ends with a detailed, printable report. Open the two samples below (fictional demo devices).</p>
+    <div class="head">
+      <div class="label">Reports</div>
+      <h2>Every scan ends with a report</h2>
+      <p>Printable HTML plus machine-readable JSON. Both samples below use fictional demo devices.</p>
     </div>
     <div class="reports">
-      <a class="report" href="/samples/sample-threats/report.html">
-        <div class="img"><img src="/images/report-sample-threats.png" alt="Sample report with threats detected" loading="lazy"></div>
-        <div class="body"><h3>Android: threats detected <span class="tag bad">2 threats</span></h3>
-          <p>Stalkerware found and removed, a banking trojan that needs one tap on the phone, failed security checks and an action plan.</p>
-          <div class="open">Open sample report →</div></div>
-      </a>
-      <a class="report" href="/samples/sample-clean/report.html">
-        <div class="img"><img src="/images/report-sample-clean.png" alt="Sample report for a clean iPhone" loading="lazy"></div>
-        <div class="body"><h3>iPhone: no threats found <span class="tag ok">Clean</span></h3>
-          <p>Deep scan of an encrypted backup with MVT, iOS version check against the latest signed release, and hardening tips.</p>
-          <div class="open">Open sample report →</div></div>
-      </a>
+      <div class="report">
+        <a class="preview" href="/samples/sample-threats/report.html"><img src="/images/report-sample-threats.png" alt="Sample report showing threats detected" loading="lazy"></a>
+        <h3>Android, threats detected <span class="status bad"><i class="fi fi-rr-shield-exclamation"></i>2 threats</span></h3>
+        <p>Stalkerware found and removed, a banking trojan that needs one tap on the phone, failed security checks and an action plan.</p>
+        <a class="link" href="/samples/sample-threats/report.html">Open the sample report <i class="fi fi-rr-arrow-small-right"></i></a>
+      </div>
+      <div class="report">
+        <a class="preview" href="/samples/sample-clean/report.html"><img src="/images/report-sample-clean.png" alt="Sample report for an iPhone with no threats" loading="lazy"></a>
+        <h3>iPhone, no threats found <span class="status ok"><i class="fi fi-rr-shield-check"></i>Clean</span></h3>
+        <p>Deep scan of an encrypted backup with MVT, an iOS version check against the latest signed release, and hardening advice.</p>
+        <a class="link" href="/samples/sample-clean/report.html">Open the sample report <i class="fi fi-rr-arrow-small-right"></i></a>
+      </div>
     </div>
-    <div class="includes">
-      <div class="inc"><b>Device details</b>Brand, model, model code, OS, interface, build, patch, storage, battery</div>
-      <div class="inc"><b>Threats &amp; evidence</b>Why each item was flagged, its source, version, install date and SHA-256</div>
-      <div class="inc"><b>Security checks</b>Pass / warn / fail for each check, with how to fix it</div>
-      <div class="inc"><b>Recommendations</b>Prioritised actions, including where to get expert help</div>
+    <div class="contents">
+      <div><b>Device details</b><span>Brand, model, model code, OS, build, patch level, storage, battery</span></div>
+      <div><b>Findings</b><span>Why each item was flagged, its source, version, install date and SHA-256</span></div>
+      <div><b>Security checks</b><span>Pass, warning or fail for each check, with how to fix it</span></div>
+      <div><b>Recommendations</b><span>Prioritised next steps, including where to get expert help</span></div>
     </div>
   </div>
 </section>
 
 <section id="platforms">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">Platforms</div>
-      <h2>Android and iPhone, side by side</h2>
+    <div class="head">
+      <div class="label">Platforms</div>
+      <h2>Android and iPhone</h2>
     </div>
-    <div class="table"><table>
-      <tr><th>Capability</th><th>Android</th><th>iPhone / iPad</th></tr>
-      <tr><td>Spyware &amp; stalkerware indicators</td><td>Package names, APK hashes, app processes, system properties</td><td>App bundle IDs, configuration profiles</td></tr>
-      <tr><td>Deep forensic scan (MVT)</td><td>Full bug report: accessibility, app ops, battery history, receivers, settings, crash tombstones</td><td>Encrypted backup: SMS/iMessage links, Safari &amp; Chrome history, data-usage processes, TCC, WebKit</td></tr>
-      <tr><td>Behavioural malware engine</td><td><span class="yes">✓</span> Full app risk scoring</td><td>App Store vs enterprise/developer signing, jailbreak tools</td></tr>
-      <tr><td>Cloud reputation</td><td><span class="yes">✓</span> VirusTotal, MalwareBazaar (optional)</td><td>n/a</td></tr>
-      <tr><td>Removal</td><td><span class="yes">✓</span> Uninstall apps (device admins need one tap)</td><td><span class="yes">✓</span> Apps and configuration profiles</td></tr>
-      <tr><td>Requirements</td><td>USB debugging enabled</td><td>Apple Devices app or iTunes (USB driver)</td></tr>
+    <div class="table-wrap"><table>
+      <tr><th>Capability</th><th><i class="fi fi-brands-android"></i>Android</th><th><i class="fi fi-brands-apple"></i>iPhone and iPad</th></tr>
+      <tr><td>Spyware and stalkerware indicators</td><td>Package names, APK hashes, app processes, system properties</td><td>App bundle IDs, configuration profiles</td></tr>
+      <tr><td>Deep forensic scan</td><td>Full bug report: accessibility, app ops, battery history, receivers, settings, crash records</td><td>Encrypted backup: SMS and iMessage links, Safari and Chrome history, data usage, permissions, WebKit</td></tr>
+      <tr><td>Behavioural malware analysis</td><td><i class="fi fi-rr-check yes"></i>Risk score for every app</td><td>App Store versus enterprise or developer signing, jailbreak tools</td></tr>
+      <tr><td>Cloud reputation</td><td><i class="fi fi-rr-check yes"></i>VirusTotal, MalwareBazaar (optional)</td><td>Not applicable</td></tr>
+      <tr><td>Removal</td><td><i class="fi fi-rr-check yes"></i>Uninstall apps; device admins need one tap</td><td><i class="fi fi-rr-check yes"></i>Apps and configuration profiles</td></tr>
+      <tr><td>Phone setup</td><td>USB debugging enabled</td><td>Apple Devices app or iTunes on the PC</td></tr>
     </table></div>
   </div>
 </section>
 
-<section class="alt" id="privacy">
+<section id="privacy">
   <div class="wrap">
-    <div class="sec-head">
-      <div class="kicker">Privacy &amp; ethics</div>
-      <h2>Built for the phone's owner, nobody else</h2>
+    <div class="head">
+      <div class="label">Privacy</div>
+      <h2>Built for the phone's owner</h2>
     </div>
     <div class="privacy">
-      <div class="pcard"><h3>🔒 Your data stays with you</h3><ul>
-        <li>Everything runs locally on your PC. There's no account and no telemetry.</li>
-        <li>Raw bug reports and backups are deleted after the scan unless you keep them.</li>
-        <li>Serial numbers are masked in reports.</li>
-        <li>Cloud lookups are off by default and send only app fingerprints.</li></ul></div>
-      <div class="pcard"><h3>🤝 Consent first</h3><ul>
-        <li>Every scan starts with an informed-consent confirmation.</li>
-        <li>Only scan a phone you own, or one whose owner is present and agrees.</li>
-        <li>For stalkerware, PhoneSentry warns that removal may alert whoever installed it, and points to support services.</li></ul></div>
+      <div>
+        <h3><i class="fi fi-rr-lock"></i>Your data stays on your PC</h3>
+        <ul class="checks">
+          <li><i class="fi fi-rr-check"></i>Everything runs locally. No account and no telemetry.</li>
+          <li><i class="fi fi-rr-check"></i>Raw bug reports and backups are deleted after the scan unless you keep them.</li>
+          <li><i class="fi fi-rr-check"></i>Serial numbers are masked in reports.</li>
+          <li><i class="fi fi-rr-check"></i>Cloud lookups are off by default and send only app fingerprints.</li>
+        </ul>
+      </div>
+      <div>
+        <h3><i class="fi fi-rr-handshake"></i>Consent comes first</h3>
+        <ul class="checks">
+          <li><i class="fi fi-rr-check"></i>Every scan starts with an informed-consent confirmation.</li>
+          <li><i class="fi fi-rr-check"></i>Scan only a phone you own, or one whose owner is present and agrees.</li>
+          <li><i class="fi fi-rr-check"></i>For stalkerware, the app warns that removal may alert whoever installed it and points to support services.</li>
+        </ul>
+      </div>
     </div>
-    <div class="notice"><b>Honest limits.</b> A clean result lowers the likelihood of known threats but can't prove a phone is uncompromised: brand-new spyware may leave no visible trace. If you're a journalist, activist or official and believe you're targeted, contact <a href="https://securitylab.amnesty.org/get-help/">Amnesty Security Lab</a> or <a href="https://www.accessnow.org/help/">Access Now's helpline</a>. Both help for free.</div>
+    <div class="limits"><i class="fi fi-rr-info"></i><div><b>Limits.</b> A clean result lowers the likelihood of known threats but can't prove a phone is uncompromised: new spyware may leave no visible trace. If you are a journalist, activist or official and believe you are targeted, contact <a href="https://securitylab.amnesty.org/get-help/">Amnesty Security Lab</a> or the <a href="https://www.accessnow.org/help/">Access Now helpline</a>. Both help for free.</div></div>
   </div>
 </section>
 
 <section id="faq">
   <div class="wrap">
-    <div class="sec-head"><div class="kicker">FAQ</div><h2>Questions, answered</h2></div>
+    <div class="head"><div class="label">FAQ</div><h2>Common questions</h2></div>
     <div class="faq">
-      <details><summary>Can PhoneSentry remove Pegasus?</summary>
-        <p>On Android, infected apps can be uninstalled. On iPhone, Pegasus-class implants live in system memory and no tool can delete them. When indicators are found, PhoneSentry tells you how to preserve evidence, where to get expert help, and how to protect yourself: update iOS, restart daily and turn on Lockdown Mode.</p></details>
-      <details><summary>Is it really free? What's the catch?</summary>
-        <p>It's free and open source under the GPL-3.0 licence. There are no ads, accounts or telemetry. The code is on <a href="https://github.com/waleedmustafa971/PhoneSentry">GitHub</a> for anyone to inspect.</p></details>
-      <details><summary>Windows says "Windows protected your PC". Is it safe?</summary>
-        <p>PhoneSentry isn't code-signed yet, so SmartScreen warns on first launch. Click <b>More info › Run anyway</b>. You can check that your download is genuine by comparing its SHA-256 with the one published below and on the GitHub release (<code>Get-FileHash PhoneSentry.exe</code>), or build it yourself from source.</p></details>
-      <details><summary>Do I need to root or jailbreak my phone?</summary>
-        <p>No. Android only needs USB debugging, which you can turn off again afterwards. iPhone only needs you to tap "Trust".</p></details>
-      <details><summary>Will the scan change anything on my phone?</summary>
-        <p>No. Scanning is read-only. Nothing is changed unless you choose to remove a threat. On iPhone, the deep scan may offer to turn on encrypted backups, with a password you choose.</p></details>
-      <details><summary>Why does the iPhone deep scan take so long?</summary>
-        <p>It makes a full local backup (like iTunes) and analyses it. That takes time and free disk space roughly equal to the data on the phone. The backup is deleted afterwards.</p></details>
-      <details><summary>Is there a Mac or Linux version?</summary>
-        <p>Not yet. PhoneSentry is Windows-only for now. On macOS and Linux you can use <a href="https://github.com/mvt-project/mvt">MVT</a> directly from the command line.</p></details>
-      <details><summary>The scan flagged an app I trust. What now?</summary>
-        <p>"Items to review" are flagged by behaviour, not confirmed malware. If you installed the app on purpose from a trusted source, keep it and leave it unticked. Known threats (spyware/stalkerware indicator matches) are marked Critical.</p></details>
+      <details><summary>Can PhoneSentry remove Pegasus?<i class="fi fi-rr-angle-small-right"></i></summary>
+        <p>On Android, infected apps can be uninstalled. On iPhone, Pegasus-class implants run in system memory and no tool can delete them. When indicators are found, the report explains how to preserve evidence, where to get expert help, and how to protect yourself: update iOS, restart daily and turn on Lockdown Mode.</p></details>
+      <details><summary>Is it free?<i class="fi fi-rr-angle-small-right"></i></summary>
+        <p>Yes. It's open source under the GPL-3.0 licence, with no ads, accounts or telemetry. The code is on <a href="https://github.com/waleedmustafa971/PhoneSentry">GitHub</a>.</p></details>
+      <details><summary>Windows says "Windows protected your PC". Is it safe?<i class="fi fi-rr-angle-small-right"></i></summary>
+        <p>The executable isn't code-signed yet, so SmartScreen warns on first launch. Choose More info, then Run anyway. To confirm the file is genuine, compare its SHA-256 (<code>Get-FileHash PhoneSentry.exe</code>) with the checksum below, or build it from source.</p></details>
+      <details><summary>Do I need to root or jailbreak the phone?<i class="fi fi-rr-angle-small-right"></i></summary>
+        <p>No. Android needs USB debugging, which you can switch off afterwards. iPhone only needs you to tap Trust.</p></details>
+      <details><summary>Does scanning change anything on the phone?<i class="fi fi-rr-angle-small-right"></i></summary>
+        <p>No. Scanning is read-only, and nothing changes unless you choose to remove a threat. On iPhone, the deep scan may offer to turn on encrypted backups with a password you choose.</p></details>
+      <details><summary>Why does the iPhone deep scan take so long?<i class="fi fi-rr-angle-small-right"></i></summary>
+        <p>It makes a full local backup, like iTunes does, then analyses it. That needs time and free disk space roughly equal to the data on the phone. The backup is deleted afterwards.</p></details>
+      <details><summary>Is there a version for Mac or Linux?<i class="fi fi-rr-angle-small-right"></i></summary>
+        <p>Not yet. On macOS and Linux you can run <a href="https://github.com/mvt-project/mvt">MVT</a> directly from the command line.</p></details>
+      <details><summary>A trusted app was flagged. What should I do?<i class="fi fi-rr-angle-small-right"></i></summary>
+        <p>Items under "review" are flagged by behaviour, not confirmed as malware. If you installed the app on purpose from a source you trust, keep it. Matches against known spyware or stalkerware are marked Critical.</p></details>
     </div>
   </div>
 </section>
 
-<section id="download" style="padding-top:20px">
+<section id="download">
   <div class="wrap">
     <div class="download">
-      <img src="/images/logo-1024.png" alt="">
-      <h2>Check your phone today</h2>
-      <p>Download PhoneSentry, plug in your phone and get answers in minutes.</p>
-      <a class="btn btn-primary" href="https://github.com/waleedmustafa971/PhoneSentry/releases/latest/download/PhoneSentry.exe">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.4 4.5v7H3zm0 13 7.4 1v-7H3zm8.3 1.1L21 21v-8.5h-9.7zm0-15.2v7.1H21V3z"/></svg>
-        Download PhoneSentry.exe</a>
-      <div class="reqs"><span>v1.0.0</span><span>86.5 MB</span><span>Windows 10 / 11, 64-bit</span><span>Android &amp; iPhone</span></div>
-      <div class="checksum">SHA-256 checksum
-        <div class="hash"><code id="sha">7fe6c99bf494973786e378ae254386b357bddd1666476592f25901b207158b09</code><button class="copy" onclick="navigator.clipboard.writeText(document.getElementById('sha').textContent).then(()=>{this.textContent='Copied'})">Copy</button></div>
+      <div>
+        <h2>Download PhoneSentry</h2>
+        <p>Plug in your phone and get answers in minutes.</p>
+        <div class="spec">
+          <span><i class="fi fi-brands-windows"></i>Windows 10 and 11, 64-bit</span>
+          <span><i class="fi fi-rr-smartphone"></i>Android and iPhone</span>
+          <span><i class="fi fi-rr-database"></i>Version 1.0.0, 86.5 MB</span>
+        </div>
+      </div>
+      <a class="btn btn-primary" href="https://github.com/waleedmustafa971/PhoneSentry/releases/latest/download/PhoneSentry.exe"><i class="fi fi-rr-download"></i>Download PhoneSentry.exe</a>
+      <div class="hash">
+        <span>SHA-256</span>
+        <code id="sha">7fe6c99bf494973786e378ae254386b357bddd1666476592f25901b207158b09</code>
+        <button class="copy" type="button" id="copy"><i class="fi fi-rr-copy-alt"></i><span>Copy</span></button>
       </div>
     </div>
   </div>
 </section>
+</main>
 
 <footer>
   <div class="wrap">
-    <div class="fine">
-      <a class="brand" href="#"><img src="/images/logo.png" alt="" style="width:28px;height:28px">PhoneSentry</a>
-      <p>Free, open-source mobile spyware &amp; malware scanner. Spyware detection is powered by the Mobile Verification Toolkit and public indicator feeds. PhoneSentry is independent and isn't affiliated with Amnesty International or any feed publisher.</p>
+    <div class="about">
+      <a class="brand" href="#"><img src="/images/logo.png" alt="">PhoneSentry</a>
+      <p>Open-source mobile spyware and malware scanner. Detection uses the Mobile Verification Toolkit and public indicator feeds. PhoneSentry is independent and isn't affiliated with Amnesty International or any feed publisher.</p>
     </div>
-    <div class="cols">
-      <div><b style="color:var(--ink)">Project</b><br><a href="https://github.com/waleedmustafa971/PhoneSentry">Source code</a><br><a href="https://github.com/waleedmustafa971/PhoneSentry/releases">Releases</a><br><a href="https://github.com/waleedmustafa971/PhoneSentry/issues">Report an issue</a></div>
-      <div><b style="color:var(--ink)">Help</b><br><a href="https://securitylab.amnesty.org/get-help/">Amnesty Security Lab</a><br><a href="https://www.accessnow.org/help/">Access Now Helpline</a><br><a href="https://stopstalkerware.org/">Stop Stalkerware</a></div>
-      <div><b style="color:var(--ink)">Legal</b><br><a href="https://github.com/waleedmustafa971/PhoneSentry/blob/main/LICENSE">GPL-3.0 licence</a><br><a href="https://github.com/waleedmustafa971/PhoneSentry/blob/main/THIRD_PARTY_NOTICES.md">Third-party notices</a><br><a href="https://github.com/waleedmustafa971/PhoneSentry/blob/main/SECURITY.md">Security policy</a></div>
-    </div>
+    <div><h4>Project</h4><ul>
+      <li><a href="https://github.com/waleedmustafa971/PhoneSentry">Source code</a></li>
+      <li><a href="https://github.com/waleedmustafa971/PhoneSentry/releases">Releases</a></li>
+      <li><a href="https://github.com/waleedmustafa971/PhoneSentry/issues">Report an issue</a></li></ul></div>
+    <div><h4>Get help</h4><ul>
+      <li><a href="https://securitylab.amnesty.org/get-help/">Amnesty Security Lab</a></li>
+      <li><a href="https://www.accessnow.org/help/">Access Now helpline</a></li>
+      <li><a href="https://stopstalkerware.org/">Stop Stalkerware</a></li></ul></div>
+    <div><h4>Legal</h4><ul>
+      <li><a href="https://github.com/waleedmustafa971/PhoneSentry/blob/main/LICENSE">GPL-3.0 licence</a></li>
+      <li><a href="https://github.com/waleedmustafa971/PhoneSentry/blob/main/THIRD_PARTY_NOTICES.md">Third-party notices</a></li>
+      <li><a href="https://github.com/waleedmustafa971/PhoneSentry/blob/main/SECURITY.md">Security policy</a></li></ul></div>
+    <div class="credit">Icons: <a href="https://www.flaticon.com/uicons">UIcons by Flaticon</a></div>
   </div>
 </footer>
+
+<script>
+  document.getElementById("theme").addEventListener("click", function () {
+    var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("ps-theme", next); } catch (e) {}
+  });
+  document.getElementById("copy").addEventListener("click", function () {
+    var label = this.querySelector("span");
+    var text = document.getElementById("sha").textContent;
+    var done = function () { label.textContent = "Copied"; setTimeout(function () { label.textContent = "Copy"; }, 1600); };
+    if (navigator.clipboard) { navigator.clipboard.writeText(text).then(done, function () {}); }
+  });
+</script>
 </body>
 </html>
