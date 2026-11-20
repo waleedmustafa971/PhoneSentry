@@ -1,0 +1,22 @@
+# Python / build
+.venv/
+__pycache__/
+*.pyc
+build-tmp/
+build/
+dist/
+*.spec
+
+# Downloaded at build time (see build.ps1)
+vendor/
+assets/iocs/
+
+# Generated
+assets/logo-1024.png
+/samples/
+
+# Never commit scan output: it contains personal data
+*Reports/
+bugreport*.zip
+report.json
+!website/samples/**/report.json
